@@ -25,6 +25,7 @@ class Workout(db.Model):
     duration_minutes = db.Column(db.Integer)
     notes = db.Column(db.Text)
 
+    WorkoutExercise = db.relationship('workoutexercise', uselist = False, back_populates = 'workout')
 
 class WorkoutExercise(db.Model):
     __tablename__='workoutexercise'
@@ -36,5 +37,7 @@ class WorkoutExercise(db.Model):
     sets = db.Column(db.Integer)
     duration_seconds = db.Column(db.Integer)
 
+    workout = db.relationship('Workout', back_populates = 'WorkoutExercise')
+    exercise = db.relationship('Exercise', back_populates = 'WorkoutExercise')
 
     
