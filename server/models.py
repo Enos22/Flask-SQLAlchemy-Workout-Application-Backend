@@ -4,9 +4,7 @@ db = SQLAlchemy()
 
 # Define Models here
 
-# db.session.query(Exercise).delete()
-# db.session.query(Workout).delete()
-# db.session.query(WorkoutExercise).delete()
+
 
 class Exercise(db.Model):
     __tablename__='exercise'
