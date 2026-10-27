@@ -146,6 +146,38 @@ def get_exercises():
 
     return jsonify(excercise_list), 200
 
+#list excercises with associated workouts
+@app.route("/exercises/<int:id>", methods=["GET"])
+def get_exercise(id):
+    exercise = Exercise.query.filter_by(id=id).first()
+    if not exercise:
+        return jsonify({"error": "Exercise Not Found!"}), 404
+
+    exercise_data = {
+        "id": exercise.id,
+        "name": exercise.name,
+        "category": exercise.category,
+        "equipment_needed": exercise.equipment_needed,
+        "workouts": []
+    }
+    for ew in exercise.WorkoutExercises:
+        workout = ew.workout
+        if not workout:
+            continue
+
+        exercise_data["workouts"].append({
+            "workout_id": workout.id,
+            "workout_date": workout.date.isoformat() if workout.date else None,
+            "notes": workout.notes,
+            "duration_minutes": workout.duration_minutes,
+            "reps": ew.reps,
+            "sets": ew.sets,
+            "duration_seconds": ew.duration_seconds
+        })
+
+    return jsonify(exercise_data), 200
+
+
 
 
 if __name__ == '__main__':
