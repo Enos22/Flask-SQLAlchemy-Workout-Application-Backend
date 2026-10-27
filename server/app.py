@@ -113,7 +113,39 @@ def create_workout():
         workout_dict["workout_exercises"].append(exercise_details)
 
     return jsonify(workout_dict), 201
-    
+
+
+#delete a wokout
+@app.route("/workouts/<int:id>", methods=["DELETE"])
+def delete_workout(id):
+    workout = Workout.query.filter_by(id=id).first()
+
+   # global workouts
+    # workout = next((w for w in workouts if w.id ==id), None)
+
+    if not workout:
+        return("Workout Not Found", 404)
+    db.session.delete(workout)
+    db.session.commit()
+
+    return("Workout deleted", 204)
+
+#lst all exercises
+@app.route("/exercises", methods = ["GET"])
+def get_exercises():
+    exercises = Exercise.query.all()
+
+    excercise_list = []
+    for e in exercises:
+        excercise_list.append({
+            "id": e.id,
+            "name": e.name,
+            "category": e.category,
+            "equipment_needed": e.equipment_needed
+        })
+
+    return jsonify(excercise_list), 200
+
 
 
 if __name__ == '__main__':
