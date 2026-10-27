@@ -274,6 +274,50 @@ def delete_exercise(id):
 
     return "Exercise deleted", 204
 
+@app.route("/workouts/<int:workout_id>/exercise/<int:exercise_id>/workout_excercises", methods=["POST"])
+def create_all(workout_id, exercise_id):
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Request body is required."}), 400
+
+    workout = Workout.query.filter_by(id=workout_id).first()
+    if not workout:
+        return jsonify({"error": "Workout not found."}), 404
+
+    exercise = Exercise.query.filter_by(id=exercise_id).first()
+    if not exercise:
+        return jsonify({"error": "Exercise not found."}), 404
+
+    reps = data.get("reps")
+    sets = data.get("sets")
+    duration_seconds = data.get("duration_seconds")
+
+    if reps is None or sets is None or duration_seconds is None:
+        return jsonify({"error": "reps, sets, and duration_seconds are required."}), 400
+
+    existing_link = WorkoutExercise.query.filter_by(workout_id=workout_id, exercise_id=exercise_id).first()
+    if existing_link:
+        return jsonify({"error": "This exercise is already assigned to this workout."}), 409
+
+    workout_exercise = WorkoutExercise(
+        workout_id=workout_id,
+        exercise_id=exercise_id,
+        reps=reps,
+        sets=sets,
+        duration_seconds=duration_seconds
+    )
+    db.session.add(workout_exercise)
+    db.session.commit()
+
+    return jsonify({
+        "id": workout_exercise.id,
+        "workout_id": workout_exercise.workout_id,
+        "exercise_id": workout_exercise.exercise_id,
+        "reps": workout_exercise.reps,
+        "sets": workout_exercise.sets,
+        "duration_seconds": workout_exercise.duration_seconds
+    }), 201
+
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
