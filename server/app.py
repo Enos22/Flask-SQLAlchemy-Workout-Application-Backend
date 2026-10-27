@@ -177,7 +177,102 @@ def get_exercise(id):
 
     return jsonify(exercise_data), 200
 
+#create exercise
 
+@app.route("/exercises", methods=["POST"])
+def create_exercise():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Request body is required."}), 400
+
+    exercise_name = data.get("name")
+    category = data.get("category")
+    if not exercise_name or not category:
+        return jsonify({"error": "Exercise name and category are required."}), 400
+
+    equipment_needed = data.get("equipment_needed", False)
+
+    try:
+        new_exercise = Exercise(
+            name=exercise_name,
+            category=category,
+            equipment_needed=bool(equipment_needed)
+        )
+        db.session.add(new_exercise)
+        db.session.flush()
+
+        exercises_data = data.get("workout_exercises", [])
+        if exercises_data is not None and not isinstance(exercises_data, list):
+            return jsonify({"error": "workout_exercises must be a list."}), 400
+
+        for ed in exercises_data:
+            if not isinstance(ed, dict):
+                return jsonify({"error": "Each workout_exercise entry must be an object."}), 400
+
+            workout_id = ed.get("workout_id")
+            if workout_id is None:
+                return jsonify({"error": "workout_id is required for each workout_exercise."}), 400
+
+            workout = Workout.query.filter_by(id=workout_id).first()
+            if not workout:
+                return jsonify({"error": f"Workout {workout_id} not found."}), 404
+
+            reps = ed.get("reps")
+            sets = ed.get("sets")
+            duration_seconds = ed.get("duration_seconds")
+            if reps is None or sets is None or duration_seconds is None:
+                return jsonify({"error": "reps, sets, and duration_seconds are required for each workout_exercise."}), 400
+
+            workout_exercise = WorkoutExercise(
+                exercise_id=new_exercise.id,
+                workout_id=workout_id,
+                reps=reps,
+                sets=sets,
+                duration_seconds=duration_seconds
+            )
+            db.session.add(workout_exercise)
+
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        return jsonify({"error": "Unable to create exercise."}), 400
+
+    exercise_dict = {
+        "id": new_exercise.id,
+        "name": new_exercise.name,
+        "category": new_exercise.category,
+        "equipment_needed": new_exercise.equipment_needed,
+        "workout_exercises": []
+    }
+
+    for we in new_exercise.WorkoutExercises:
+        exercise = we.exercise
+        exercise_details = {
+            "exercise_id": exercise.id if exercise else None,
+            "exercise_name": exercise.name if exercise else None,
+            "workout_id": we.workout_id,
+            "reps": we.reps,
+            "sets": we.sets,
+            "duration_seconds": we.duration_seconds
+        }
+        exercise_dict["workout_exercises"].append(exercise_details)
+
+    return jsonify(exercise_dict), 201
+
+
+@app.route("/exercises/<int:id>", methods=["DELETE"])
+def delete_exercise(id):
+    exercise = Exercise.query.filter_by(id=id).first()
+    if not exercise:
+        return jsonify({"error": "Exercise Not Found!"}), 404
+
+    for workout_exercise in list(exercise.WorkoutExercises):
+        db.session.delete(workout_exercise)
+
+    db.session.delete(exercise)
+    db.session.commit()
+
+    return "Exercise deleted", 204
 
 
 if __name__ == '__main__':
