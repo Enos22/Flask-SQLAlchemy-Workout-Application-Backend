@@ -41,7 +41,8 @@ Start the Flask server from the server directory:
 
 ```bash
 cd server
-pipenv run flask --app app run
+pipenv shell
+python3 app.py
 ```
 
 You can also run the app directly:
