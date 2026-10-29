@@ -5,10 +5,11 @@ from datetime import date
 from models import db, Exercise, Workout, WorkoutExercise
 
 with app.app_context():
-    # reset data and add new example data, committing to db
+    # reset data safely in dependency order so no FK errors or duplicates remain
+    db.session.query(WorkoutExercise).delete()
+    db.session.query(Workout).delete()
     db.session.query(Exercise).delete()
-    # db.session.query(Workout).delete()
-    # db.session.query(WorkoutExercise).delete()
+    db.session.commit()
 
     exercises = [
         Exercise(
@@ -66,26 +67,26 @@ with app.app_context():
                 exercise_id=exercises[0].id,
                 reps=15,
                 sets=3,
-                duration_seconds=None
+                duration_seconds=30
             ),
             WorkoutExercise(
                 workout_id=workout1.id,
                 exercise_id=exercises[2].id,
                 reps=12,
                 sets=3,
-                duration_seconds=None
+                duration_seconds=45
             ),
             WorkoutExercise(
                 workout_id=workout2.id,
                 exercise_id=exercises[1].id,
-                reps=None,
-                sets=None,
+                reps=15,
+                sets=2,
                 duration_seconds=1200
             ),
             WorkoutExercise(
                 workout_id=workout2.id,
                 exercise_id=exercises[3].id,
-                reps=None,
+                reps=10,
                 sets=3,
                 duration_seconds=60
             )
