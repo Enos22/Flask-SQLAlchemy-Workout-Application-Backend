@@ -5,7 +5,7 @@ from datetime import date
 from models import db, Exercise, Workout, WorkoutExercise
 
 with app.app_context():
-    # reset data safely in dependency order so no FK errors or duplicates remain
+    # reset to avd dupkates
     db.session.query(WorkoutExercise).delete()
     db.session.query(Workout).delete()
     db.session.query(Exercise).delete()
