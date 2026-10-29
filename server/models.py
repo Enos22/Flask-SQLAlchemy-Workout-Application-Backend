@@ -1,5 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
+from marshmallow import Schema, fields, validate
 from sqlalchemy.orm import validates
+
 db = SQLAlchemy()
 
 # Define Models here
@@ -40,5 +42,30 @@ class WorkoutExercise(db.Model):
 
     workout = db.relationship('Workout', back_populates = 'WorkoutExercises')
     exercise = db.relationship('Exercise', back_populates = 'WorkoutExercises')
+
+
+class ExerciseSchema(Schema):
+    id = fields.Int(dump_only=True)
+    name = fields.String(required=True, validate=validate.Length(min=1))
+    category = fields.String(required=True, validate=validate.Length(min=1))
+    equipment_needed = fields.Boolean(load_default=False)
+    workout_exercises = fields.List(fields.Dict(), load_default=list, dump_default=list)
+
+
+class WorkoutSchema(Schema):
+    id = fields.Int(dump_only=True)
+    date = fields.Date(required=True)
+    duration_minutes = fields.Int(required=True, validate=validate.Range(min=1))
+    notes = fields.String(required=True, validate=validate.Length(min=1))
+    workout_exercises = fields.List(fields.Dict(), load_default=list, dump_default=list)
+
+
+class WorkoutExerciseSchema(Schema):
+    id = fields.Int(dump_only=True)
+    workout_id = fields.Int(required=True, validate=validate.Range(min=1))
+    exercise_id = fields.Int(required=True, validate=validate.Range(min=1))
+    reps = fields.Int(required=True, validate=validate.Range(min=1))
+    sets = fields.Int(required=True, validate=validate.Range(min=1))
+    duration_seconds = fields.Int(required=True, validate=validate.Range(min=1))
 
     
